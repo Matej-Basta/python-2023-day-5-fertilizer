@@ -3,18 +3,21 @@ import argparse
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file")
+    parser.add_argument("output_file")
     args = parser.parse_args()
 
     try:
         with open(args.input_file, "r") as input_file:
-            almanac = extract_numbers(input_file)
+            with open(args.output_file, "w") as output_file:
+                almanac = extract_numbers(input_file)
 
-            lowest_location = float("inf")
-            for seed in almanac["seeds"]:
-                new_location = get_location(seed, almanac)
-                lowest_location = min(lowest_location, new_location)
-            
-            print(lowest_location)
+                lowest_location = float("inf")
+                for seed in almanac["seeds"]:
+                    new_location = get_location(seed, almanac)
+                    lowest_location = min(lowest_location, new_location)
+                
+                print(lowest_location)
+                output_file.write(str(lowest_location))
 
     except FileNotFoundError:
         raise Exception("The file does not exist.")
