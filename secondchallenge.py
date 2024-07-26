@@ -11,15 +11,15 @@ def main():
             with open(args.output_file, "w") as output_file:
                 almanac = extract_numbers(input_file)
 
-                lowest_location = float("inf")
-                for seed, count in zip(almanac["seeds"][::2], almanac["seeds"][1::2]):
-                    print("here")
-                    for i in range(count):
-                        new_location = get_location(seed + i, almanac)
-                        lowest_location = min(lowest_location, new_location)
-                
-                print(lowest_location)
-                output_file.write(str(lowest_location))
+                location = 0
+                valid_seed = False
+                while not valid_seed:
+                    print(location)
+                    seed = get_seed(location, almanac)
+                    if is_seed_valid(seed, almanac["seeds"]):
+                        valid_seed = True
+                        print(location)
+                    location += 1
 
     except FileNotFoundError:
         raise Exception("The file does not exist.")
@@ -81,54 +81,59 @@ def extract_numbers(input_file):
                     almanac["humidity_to_location"].append(data)
     return almanac
 
+def is_seed_valid(seed, seeds):
+    for seed_start, count in zip(seeds[::2], seeds[1::2]):
+        if seed >= seed_start and seed < seed_start + count:
+            return True               
+    return False
 
-def get_soil(seed, seed_soil):
-    for section in seed_soil:
-        if seed >= section[1] and seed <= section[1] + section[-1]:
-            return section[0] + seed - section[1]
-    return seed
+def get_humidity(location, humidity_location):
+    for section in humidity_location:
+        if location >= section[0] and location <= section[0] + section[-1]:
+            return section[1] + location - section[0]
+    return location
 
-def get_fertilizer(soil, soil_fertilizer):
-    for section in soil_fertilizer:
-        if soil >= section[1] and soil <= section[1] + section[-1]:
-            return section[0] + soil - section[1]
-    return soil
-
-def get_water(fertilizer, fertilizer_water):
-    for section in fertilizer_water:
-        if fertilizer >= section[1] and fertilizer <= section[1] + section[-1]:
-            return section[0] + fertilizer - section[1]
-    return fertilizer
-
-def get_light(water, water_light):
-    for section in water_light:
-        if water >= section[1] and water <= section[1] + section[-1]:
-            return section[0] + water - section[1]
-    return water
-
-def get_temperature(light, light_temperature):
-    for section in light_temperature:
-        if light >= section[1] and light <= section[1] + section[-1]:
-            return section[0] + light - section[1]
-    return light
-
-def get_humidity(temperature, temperature_humidity):
+def get_temperature(humidity, temperature_humidity):
     for section in temperature_humidity:
-        if temperature >= section[1] and temperature <= section[1] + section[-1]:
-            return section[0] + temperature - section[1]
+        if humidity >= section[0] and humidity <= section[0] + section[-1]:
+            return section[1] + humidity - section[0]
+    return humidity
+
+def get_light(temperature, light_temperature):
+    for section in light_temperature:
+        if temperature >= section[0] and temperature <= section[0] + section[-1]:
+            return section[1] + temperature - section[0]
     return temperature
 
-def get_location(seed, almanac):
-    soil = get_soil(seed, almanac["seed_to_soil"])
-    fertilizer = get_fertilizer(soil, almanac["soil_to_fertilizer"])
-    water = get_water(fertilizer, almanac["fertilizer_to_water"])
-    light = get_light(water, almanac["water_to_light"])
-    temperature = get_temperature(light, almanac["light_to_temperature"])
-    humidity = get_humidity(temperature, almanac["temperature_to_humidity"])
-    for section in almanac["humidity_to_location"]:
-        if humidity >= section[1] and humidity <= section[1] + section[-1]:
-            return section[0] + humidity - section[1]
-    return humidity
+def get_water(light, water_ligth):
+    for section in water_ligth:
+        if light >= section[0] and light <= section[0] + section[-1]:
+            return section[1] + light - section[0]
+    return light
+
+def get_fertilizer(water, fertilizer_water):
+    for section in fertilizer_water:
+        if water >= section[0] and water <= section[0] + section[-1]:
+            return section[1] + water - section[0]
+    return water
+
+def get_soil(fertilizer, soil_fertilizer):
+    for section in soil_fertilizer:
+        if fertilizer >= section[0] and fertilizer <= section[0] + section[-1]:
+            return section[1] + fertilizer - section[0]
+    return fertilizer
+
+def get_seed(location, almanac):
+    humidity = get_humidity(location, almanac["humidity_to_location"])
+    temperature = get_temperature(humidity, almanac["temperature_to_humidity"])
+    light = get_light(temperature, almanac["light_to_temperature"])
+    water = get_water(light, almanac["water_to_light"])
+    fertilizer = get_fertilizer(water, almanac["fertilizer_to_water"])
+    soil = get_soil(fertilizer, almanac["soil_to_fertilizer"])
+    for section in almanac["seed_to_soil"]:
+        if soil >= section[0] and soil <= section[0] + section[-1]:
+            return section[1] + soil - section[0]
+    return soil
 
 if __name__ == "__main__":
     main()
